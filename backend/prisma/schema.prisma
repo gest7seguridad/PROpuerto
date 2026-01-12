@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id                String   @id @default(uuid())
+  dni               String   @unique
+  nombre            String
+  apellidos         String
+  email             String   @unique
+  telefono          String?
+  password          String
+
+  // Domicilio - hash único para evitar duplicados
+  direccionHash     String   @unique @map("direccion_hash")
+  direccionCompleta String   @map("direccion_completa")
+  numero            String?
+  piso              String?
+  puerta            String?
+  codigoPostal      String   @map("codigo_postal")
+  localidad         String   @default("Puerto del Rosario")
+
+  verificado        Boolean  @default(false)
+  tokenVerificacion String?  @map("token_verificacion")
+
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  progreso          ProgresoModulo[]
+  examenes          Examen[]
+  certificado       Certificado?
+
+  @@index([dni])
+  @@index([email])
+  @@index([direccionHash])
+  @@map("usuarios")
+}
+
+model Administrador {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  nombre    String
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("administradores")
+}
+
+model Modulo {
+  id          Int      @id @default(autoincrement())
+  orden       Int      @unique
+  titulo      String
+  descripcion String?
+  contenido   String   @db.Text
+  videoUrl    String?  @map("video_url")
+  duracionMin Int      @map("duracion_min")
+  activo      Boolean  @default(true)
+
+  progreso    ProgresoModulo[]
+
+  @@map("modulos")
+}
+
+model ProgresoModulo {
+  id              String    @id @default(uuid())
+  usuarioId       String    @map("usuario_id")
+  moduloId        Int       @map("modulo_id")
+  iniciado        DateTime  @default(now())
+  tiempoAcumulado Int       @default(0) @map("tiempo_acumulado")
+  completado      Boolean   @default(false)
+  fechaCompletado DateTime? @map("fecha_completado")
+
+  usuario         Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  modulo          Modulo    @relation(fields: [moduloId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, moduloId])
+  @@map("progreso_modulos")
+}
+
+model Pregunta {
+  id                Int      @id @default(autoincrement())
+  enunciado         String   @db.Text
+  opciones          Json
+  respuestaCorrecta Int      @map("respuesta_correcta")
+  explicacion       String?  @db.Text
+  activa            Boolean  @default(true)
+
+  @@map("preguntas")
+}
+
+model Examen {
+  id           String    @id @default(uuid())
+  usuarioId    String    @map("usuario_id")
+  intentoNum   Int       @map("intento_num")
+  preguntasIds Json      @map("preguntas_ids")
+  respuestas   Json?
+  fechaInicio  DateTime  @default(now()) @map("fecha_inicio")
+  fechaFin     DateTime? @map("fecha_fin")
+  puntuacion   Float?
+  aprobado     Boolean?
+
+  usuario      Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("examenes")
+}
+
+model Certificado {
+  id                 String    @id @default(uuid())
+  usuarioId          String    @unique @map("usuario_id")
+  codigoVerificacion String    @unique @default(uuid()) @map("codigo_verificacion")
+  fechaEmision       DateTime  @default(now()) @map("fecha_emision")
+  notaExamen         Float     @map("nota_examen")
+
+  firmaSolicitada    Boolean   @default(false) @map("firma_solicitada")
+  firmaId            String?   @map("firma_id")
+  firmado            Boolean   @default(false)
+  fechaFirma         DateTime? @map("fecha_firma")
+
+  pdfGenerado        Boolean   @default(false) @map("pdf_generado")
+  pdfPath            String?   @map("pdf_path")
+
+  usuario            Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([codigoVerificacion])
+  @@map("certificados")
+}
+
+model ConfiguracionExamen {
+  id              Int   @id @default(1)
+  numPreguntas    Int   @default(20) @map("num_preguntas")
+  notaMinAprobado Float @default(70) @map("nota_min_aprobado")
+  tiempoLimiteMin Int   @default(30) @map("tiempo_limite_min")
+  maxIntentos     Int   @default(3) @map("max_intentos")
+
+  @@map("configuracion_examen")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  usuarioId String   @map("usuario_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([token])
+  @@index([usuarioId])
+  @@map("refresh_tokens")
+}

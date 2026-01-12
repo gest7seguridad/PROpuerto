@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: residuos_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: residuos_user
+      POSTGRES_PASSWORD: residuos_password
+      POSTGRES_DB: residuos_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U residuos_user -d residuos_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Node.js
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: residuos_backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://residuos_user:residuos_password@db:5432/residuos_db
+      - JWT_SECRET=your_jwt_secret_change_in_production_min_32_chars
+      - JWT_REFRESH_SECRET=your_refresh_secret_change_in_production_min_32_chars
+      - PORT=3000
+      - FRONTEND_URL=http://localhost:5173
+      - SMTP_HOST=smtp.example.com
+      - SMTP_PORT=587
+      - SMTP_USER=
+      - SMTP_PASS=
+      - EMAIL_FROM=noreply@puertodelrosario.org
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/uploads:/app/uploads
+
+  # Frontend React (desarrollo)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: residuos_frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://localhost:3000/api
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

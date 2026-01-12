@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400;
+  }
+
+  .btn-success {
+    @apply bg-green-600 text-white hover:bg-green-700 focus:ring-green-500;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+  }
+
+  .input {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors;
+  }
+
+  .input-error {
+    @apply border-red-500 focus:ring-red-500;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-md transition-shadow duration-200;
+  }
+}
+
+/* Estilos para el contenido HTML de los módulos */
+.modulo-contenido h2 {
+  @apply text-2xl font-bold text-primary-600 mt-6 mb-4;
+}
+
+.modulo-contenido h3 {
+  @apply text-xl font-semibold text-gray-800 mt-5 mb-3;
+}
+
+.modulo-contenido h4 {
+  @apply text-lg font-medium text-gray-700 mt-4 mb-2;
+}
+
+.modulo-contenido p {
+  @apply text-gray-600 mb-4 leading-relaxed;
+}
+
+.modulo-contenido ul, .modulo-contenido ol {
+  @apply mb-4 pl-6 space-y-2;
+}
+
+.modulo-contenido ul {
+  @apply list-disc;
+}
+
+.modulo-contenido ol {
+  @apply list-decimal;
+}
+
+.modulo-contenido li {
+  @apply text-gray-600;
+}
+
+.modulo-contenido strong {
+  @apply font-semibold text-gray-800;
+}
+
+.modulo-contenido em {
+  @apply italic text-gray-500;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
