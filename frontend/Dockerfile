@@ -1,19 +1,34 @@
-# Frontend Dockerfile
-FROM node:20-alpine
+# Frontend Dockerfile - Production Build
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copiar archivos de dependencias
+# Copy package files
 COPY package*.json ./
 
-# Instalar dependencias
+# Install dependencies
 RUN npm ci
 
-# Copiar el resto del codigo
+# Copy source code
 COPY . .
 
-# Exponer puerto
-EXPOSE 5173
+# Build the application
+RUN npm run build
 
-# Comando de desarrollo (para produccion usar npm run build y servir con nginx)
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Production stage
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+# Install serve globally
+RUN npm install -g serve
+
+# Copy built files from builder stage
+COPY --from=builder /app/dist ./dist
+
+# Railway provides PORT environment variable
+ENV PORT=3000
+EXPOSE 3000
+
+# Serve the static files
+CMD ["sh", "-c", "serve -s dist -l $PORT"]
