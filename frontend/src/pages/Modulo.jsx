@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { modulosAPI } from '../services/api';
+import { modulosAPI, examenAPI } from '../services/api';
 import toast from 'react-hot-toast';
+
+const TIEMPO_MINIMO_NAVEGACION = 180; // 3 minutos para poder pasar al siguiente
 
 export default function Modulo() {
   const { id } = useParams();
@@ -10,11 +12,14 @@ export default function Modulo() {
   const [progreso, setProgreso] = useState(null);
   const [loading, setLoading] = useState(true);
   const [completando, setCompletando] = useState(false);
+  const [examenRealizado, setExamenRealizado] = useState(false);
+  const [tiempoActual, setTiempoActual] = useState(0);
   const timerRef = useRef(null);
   const tiempoInicioRef = useRef(Date.now());
 
   useEffect(() => {
     cargarModulo();
+    verificarExamen();
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
@@ -22,12 +27,17 @@ export default function Modulo() {
 
   useEffect(() => {
     if (modulo && progreso && !progreso.completado) {
-      // Actualizar progreso cada 30 segundos
+      // Actualizar tiempo cada segundo para UI y progreso cada 30 segundos al servidor
       timerRef.current = setInterval(() => {
         const tiempoTranscurrido = Math.floor((Date.now() - tiempoInicioRef.current) / 1000);
-        const nuevoTiempo = progreso.tiempoAcumulado + tiempoTranscurrido;
-        actualizarProgreso(nuevoTiempo);
-      }, 30000);
+        setTiempoActual(progreso.tiempoAcumulado + tiempoTranscurrido);
+
+        // Guardar en servidor cada 30 segundos
+        if (tiempoTranscurrido > 0 && tiempoTranscurrido % 30 === 0) {
+          const nuevoTiempo = progreso.tiempoAcumulado + tiempoTranscurrido;
+          actualizarProgreso(nuevoTiempo);
+        }
+      }, 1000);
     }
 
     return () => {
@@ -35,11 +45,22 @@ export default function Modulo() {
     };
   }, [modulo, progreso]);
 
+  const verificarExamen = async () => {
+    try {
+      const response = await examenAPI.estado();
+      // Si tiene intentos o ha aprobado, el examen ya fue realizado
+      setExamenRealizado(response.data.intentosRealizados > 0 || response.data.aprobado);
+    } catch (error) {
+      console.error('Error verificando estado del examen:', error);
+    }
+  };
+
   const cargarModulo = async () => {
     try {
       const response = await modulosAPI.obtener(id);
       setModulo(response.data.modulo);
       setProgreso(response.data.progreso);
+      setTiempoActual(response.data.progreso.tiempoAcumulado || 0);
       tiempoInicioRef.current = Date.now();
     } catch (error) {
       const mensaje = error.response?.data?.message || 'Error al cargar el módulo';
@@ -91,6 +112,33 @@ export default function Modulo() {
     }
   };
 
+  const irAlSiguienteModulo = async () => {
+    // Guardar progreso y completar módulo actual antes de ir al siguiente
+    const tiempoTranscurrido = Math.floor((Date.now() - tiempoInicioRef.current) / 1000);
+    const tiempoTotal = progreso.tiempoAcumulado + tiempoTranscurrido;
+
+    setCompletando(true);
+    try {
+      await modulosAPI.actualizarProgreso(id, tiempoTotal);
+      await modulosAPI.completar(id);
+
+      const siguienteId = parseInt(id) + 1;
+      navigate(`/modulo/${siguienteId}`);
+    } catch (error) {
+      const mensaje = error.response?.data?.message || 'Error al avanzar';
+      toast.error(mensaje);
+    } finally {
+      setCompletando(false);
+    }
+  };
+
+  const irAlModuloAnterior = () => {
+    const anteriorId = parseInt(id) - 1;
+    if (anteriorId >= 1) {
+      navigate(`/modulo/${anteriorId}`);
+    }
+  };
+
   const formatearTiempo = (segundos) => {
     const mins = Math.floor(segundos / 60);
     const secs = segundos % 60;
@@ -107,10 +155,12 @@ export default function Modulo() {
 
   if (!modulo) return null;
 
-  const tiempoTranscurridoActual = Math.floor((Date.now() - tiempoInicioRef.current) / 1000);
-  const tiempoTotalAcumulado = progreso.tiempoAcumulado + tiempoTranscurridoActual;
   const tiempoRequerido = modulo.duracionMin * 60;
-  const puedeCompletar = tiempoTotalAcumulado >= tiempoRequerido || progreso.completado;
+  const puedeNavegar = tiempoActual >= TIEMPO_MINIMO_NAVEGACION || progreso.completado;
+  const puedeCompletar = tiempoActual >= tiempoRequerido || progreso.completado;
+  const tiempoRestanteNavegar = Math.max(0, TIEMPO_MINIMO_NAVEGACION - tiempoActual);
+  const esUltimoModulo = modulo.orden === 5; // Total de 5 módulos
+  const esPrimerModulo = modulo.orden === 1;
 
   return (
     <div className="animate-fadeIn">
@@ -129,9 +179,13 @@ export default function Modulo() {
           </div>
           {!progreso.completado && (
             <div className="text-right">
-              <p className="text-sm text-gray-500">Tiempo restante</p>
+              <p className="text-sm text-gray-500">
+                {puedeNavegar ? 'Tiempo en módulo' : 'Tiempo para avanzar'}
+              </p>
               <p className="text-lg font-semibold text-gray-900">
-                {formatearTiempo(Math.max(0, progreso.tiempoRestante))}
+                {puedeNavegar
+                  ? formatearTiempo(tiempoActual)
+                  : formatearTiempo(tiempoRestanteNavegar)}
               </p>
             </div>
           )}
@@ -152,7 +206,7 @@ export default function Modulo() {
             ></div>
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            Debes visualizar el contenido durante al menos {modulo.duracionMin} minutos para completar el módulo
+            Debes visualizar el contenido durante al menos 3 minutos para poder avanzar al siguiente módulo
           </p>
         </div>
       )}
@@ -179,24 +233,65 @@ export default function Modulo() {
         />
       </div>
 
-      {/* Botón completar */}
-      <div className="flex justify-end">
-        {progreso.completado ? (
-          <div className="flex items-center text-green-600">
-            <span className="text-2xl mr-2">✓</span>
-            <span className="font-medium">Módulo completado</span>
-          </div>
-        ) : (
-          <button
-            onClick={completarModulo}
-            disabled={!puedeCompletar || completando}
-            className="btn btn-primary px-8 py-3"
-            title={!puedeCompletar ? 'Debes visualizar el contenido durante el tiempo mínimo requerido' : ''}
-          >
-            {completando ? 'Completando...' :
-             puedeCompletar ? 'Completar módulo' : `Espera ${formatearTiempo(tiempoRequerido - tiempoTotalAcumulado)}`}
-          </button>
-        )}
+      {/* Botones de navegación */}
+      <div className="flex justify-between items-center">
+        {/* Botón Anterior */}
+        <div>
+          {!esPrimerModulo && !examenRealizado && (
+            <button
+              onClick={irAlModuloAnterior}
+              className="btn bg-gray-200 text-gray-700 hover:bg-gray-300 px-6 py-3"
+            >
+              ← Anterior
+            </button>
+          )}
+        </div>
+
+        {/* Botón Siguiente/Completar */}
+        <div>
+          {progreso.completado ? (
+            <div className="flex items-center gap-4">
+              <span className="flex items-center text-green-600">
+                <span className="text-2xl mr-2">✓</span>
+                <span className="font-medium">Módulo completado</span>
+              </span>
+              {!esUltimoModulo && (
+                <button
+                  onClick={() => navigate(`/modulo/${parseInt(id) + 1}`)}
+                  className="btn btn-primary px-6 py-3"
+                >
+                  Siguiente →
+                </button>
+              )}
+              {esUltimoModulo && (
+                <button
+                  onClick={() => navigate('/examen')}
+                  className="btn btn-primary px-6 py-3"
+                >
+                  Ir al examen →
+                </button>
+              )}
+            </div>
+          ) : esUltimoModulo ? (
+            <button
+              onClick={completarModulo}
+              disabled={!puedeNavegar || completando}
+              className="btn btn-primary px-8 py-3"
+            >
+              {completando ? 'Completando...' :
+               puedeNavegar ? 'Completar formación' : `Espera ${formatearTiempo(tiempoRestanteNavegar)}`}
+            </button>
+          ) : (
+            <button
+              onClick={irAlSiguienteModulo}
+              disabled={!puedeNavegar || completando}
+              className="btn btn-primary px-8 py-3"
+            >
+              {completando ? 'Avanzando...' :
+               puedeNavegar ? 'Siguiente →' : `Espera ${formatearTiempo(tiempoRestanteNavegar)}`}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
