@@ -146,8 +146,15 @@ async function obtenerEstadisticas(req, res) {
         firmados: certificadosFirmados,
         pendientes: certificadosEmitidos - certificadosFirmados
       },
-      registrosPorDia,
-      tasaAprobacionPorIntento
+      registrosPorDia: registrosPorDia.map(r => ({
+        fecha: r.fecha,
+        registros: Number(r.registros)
+      })),
+      tasaAprobacionPorIntento: tasaAprobacionPorIntento.map(t => ({
+        intentoNum: Number(t.intento_num),
+        total: Number(t.total),
+        aprobados: Number(t.aprobados)
+      }))
     });
 
   } catch (error) {
