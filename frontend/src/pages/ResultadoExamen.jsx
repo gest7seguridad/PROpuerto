@@ -8,7 +8,6 @@ export default function ResultadoExamen() {
   const navigate = useNavigate();
   const [resultado, setResultado] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [mostrarDetalle, setMostrarDetalle] = useState(false);
 
   useEffect(() => {
     cargarResultado();
@@ -36,7 +35,7 @@ export default function ResultadoExamen() {
 
   if (!resultado) return null;
 
-  const { examen, resultado: res, detalle } = resultado;
+  const { resultado: res } = resultado;
   const aprobado = res.aprobado;
 
   return (
@@ -74,7 +73,7 @@ export default function ResultadoExamen() {
       </div>
 
       {/* Acciones */}
-      <div className="card mb-6">
+      <div className="card">
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           {aprobado ? (
             <button
@@ -84,79 +83,23 @@ export default function ResultadoExamen() {
               Obtener certificado 🎓
             </button>
           ) : (
-            <button
-              onClick={() => navigate('/examen')}
-              className="btn btn-primary px-8 py-3"
-            >
-              Intentar de nuevo
-            </button>
+            <>
+              <button
+                onClick={() => navigate('/examen')}
+                className="btn btn-primary px-8 py-3"
+              >
+                Intentar de nuevo
+              </button>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="btn btn-secondary px-8 py-3"
+              >
+                Repasar formación
+              </button>
+            </>
           )}
-          <button
-            onClick={() => setMostrarDetalle(!mostrarDetalle)}
-            className="btn btn-secondary px-8 py-3"
-          >
-            {mostrarDetalle ? 'Ocultar respuestas' : 'Ver respuestas'}
-          </button>
         </div>
       </div>
-
-      {/* Detalle de respuestas */}
-      {mostrarDetalle && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Revisión de respuestas</h3>
-          {detalle.map((pregunta, idx) => (
-            <div
-              key={pregunta.preguntaId}
-              className={`card border-l-4 ${
-                pregunta.esCorrecta ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'
-              }`}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <span className="text-sm text-gray-500">Pregunta {idx + 1}</span>
-                  <h4 className="font-medium text-gray-900">{pregunta.enunciado}</h4>
-                </div>
-                <span className="text-2xl ml-4">
-                  {pregunta.esCorrecta ? '✅' : '❌'}
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                {pregunta.opciones.map((opcion, opIdx) => {
-                  const esCorrecta = opIdx === pregunta.respuestaCorrecta;
-                  const esSeleccionada = opIdx === pregunta.respuestaUsuario;
-
-                  return (
-                    <div
-                      key={opIdx}
-                      className={`p-3 rounded-lg text-sm ${
-                        esCorrecta
-                          ? 'bg-green-100 text-green-800 border border-green-300'
-                          : esSeleccionada && !esCorrecta
-                            ? 'bg-red-100 text-red-800 border border-red-300'
-                            : 'bg-white text-gray-600'
-                      }`}
-                    >
-                      <span className="font-medium mr-2">{String.fromCharCode(65 + opIdx)}.</span>
-                      {opcion}
-                      {esCorrecta && <span className="ml-2 text-green-600">✓ Correcta</span>}
-                      {esSeleccionada && !esCorrecta && <span className="ml-2 text-red-600">✗ Tu respuesta</span>}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {pregunta.explicacion && (
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <strong>Explicación:</strong> {pregunta.explicacion}
-                  </p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
