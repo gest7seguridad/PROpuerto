@@ -29,8 +29,8 @@ export default function AdminPreguntas() {
   const cargarDatos = async () => {
     try {
       const [preguntasRes, modulosRes] = await Promise.all([
-        adminAPI.preguntas(),
-        adminAPI.modulos()
+        adminAPI.preguntas.listar(),
+        adminAPI.modulos.listar()
       ]);
       setPreguntas(preguntasRes.data.preguntas);
       setModulos(modulosRes.data.modulos);
@@ -43,7 +43,7 @@ export default function AdminPreguntas() {
 
   const cargarPreguntas = async () => {
     try {
-      const response = await adminAPI.preguntas({ moduloId: filtroModulo || undefined });
+      const response = await adminAPI.preguntas.listar({ moduloId: filtroModulo || undefined });
       setPreguntas(response.data.preguntas);
     } catch (error) {
       toast.error('Error al cargar las preguntas');
@@ -110,10 +110,10 @@ export default function AdminPreguntas() {
       };
 
       if (preguntaEditando) {
-        await adminAPI.actualizarPregunta(preguntaEditando.id, datos);
+        await adminAPI.preguntas.actualizar(preguntaEditando.id, datos);
         toast.success('Pregunta actualizada correctamente');
       } else {
-        await adminAPI.crearPregunta(datos);
+        await adminAPI.preguntas.crear(datos);
         toast.success('Pregunta creada correctamente');
       }
       cerrarModal();
@@ -127,7 +127,7 @@ export default function AdminPreguntas() {
     if (!confirm('¿Estas seguro de eliminar esta pregunta?')) return;
 
     try {
-      await adminAPI.eliminarPregunta(id);
+      await adminAPI.preguntas.eliminar(id);
       toast.success('Pregunta eliminada correctamente');
       cargarPreguntas();
     } catch (error) {

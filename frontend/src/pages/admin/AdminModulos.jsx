@@ -23,7 +23,7 @@ export default function AdminModulos() {
 
   const cargarModulos = async () => {
     try {
-      const response = await adminAPI.modulos();
+      const response = await adminAPI.modulos.listar();
       setModulos(response.data.modulos);
     } catch (error) {
       toast.error('Error al cargar los modulos');
@@ -77,10 +77,10 @@ export default function AdminModulos() {
 
     try {
       if (moduloEditando) {
-        await adminAPI.actualizarModulo(moduloEditando.id, formData);
+        await adminAPI.modulos.actualizar(moduloEditando.id, formData);
         toast.success('Modulo actualizado correctamente');
       } else {
-        await adminAPI.crearModulo(formData);
+        await adminAPI.modulos.crear(formData);
         toast.success('Modulo creado correctamente');
       }
       cerrarModal();
@@ -94,7 +94,7 @@ export default function AdminModulos() {
     if (!confirm('¿Estas seguro de eliminar este modulo?')) return;
 
     try {
-      await adminAPI.eliminarModulo(id);
+      await adminAPI.modulos.eliminar(id);
       toast.success('Modulo eliminado correctamente');
       cargarModulos();
     } catch (error) {
