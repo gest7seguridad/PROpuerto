@@ -371,20 +371,10 @@ async function finalizarExamenInterno(examen, config) {
   const respuestas = examen.respuestas || {};
   let correctas = 0;
 
-  const detalle = preguntas.map(pregunta => {
+  preguntas.forEach(pregunta => {
     const respuestaUsuario = respuestas[pregunta.id];
     const esCorrecta = respuestaUsuario === pregunta.respuestaCorrecta;
     if (esCorrecta) correctas++;
-
-    return {
-      preguntaId: pregunta.id,
-      enunciado: pregunta.enunciado,
-      opciones: pregunta.opciones,
-      respuestaUsuario,
-      respuestaCorrecta: pregunta.respuestaCorrecta,
-      esCorrecta,
-      explicacion: pregunta.explicacion
-    };
   });
 
   const puntuacion = (correctas / preguntas.length) * 100;
@@ -404,8 +394,7 @@ async function finalizarExamenInterno(examen, config) {
     aprobado,
     correctas,
     totalPreguntas: preguntas.length,
-    notaMinAprobado: config.notaMinAprobado,
-    detalle
+    notaMinAprobado: config.notaMinAprobado
   };
 }
 
@@ -493,31 +482,23 @@ async function obtenerResultado(req, res) {
       config = { notaMinAprobado: 70 };
     }
 
-    // Obtener preguntas con explicaciones
+    // Contar respuestas correctas sin exponer las respuestas
     const preguntas = await prisma.pregunta.findMany({
       where: { id: { in: examen.preguntasIds } },
       select: {
         id: true,
-        enunciado: true,
-        opciones: true,
-        respuestaCorrecta: true,
-        explicacion: true
+        respuestaCorrecta: true
       }
     });
 
     const respuestas = examen.respuestas || {};
+    let correctas = 0;
 
-    const detalle = preguntas.map(pregunta => {
+    preguntas.forEach(pregunta => {
       const respuestaUsuario = respuestas[pregunta.id];
-      return {
-        preguntaId: pregunta.id,
-        enunciado: pregunta.enunciado,
-        opciones: pregunta.opciones,
-        respuestaUsuario,
-        respuestaCorrecta: pregunta.respuestaCorrecta,
-        esCorrecta: respuestaUsuario === pregunta.respuestaCorrecta,
-        explicacion: pregunta.explicacion
-      };
+      if (respuestaUsuario === pregunta.respuestaCorrecta) {
+        correctas++;
+      }
     });
 
     res.json({
@@ -532,11 +513,10 @@ async function obtenerResultado(req, res) {
       resultado: {
         puntuacion: examen.puntuacion,
         aprobado: examen.aprobado,
-        correctas: detalle.filter(d => d.esCorrecta).length,
-        totalPreguntas: detalle.length,
+        correctas,
+        totalPreguntas: preguntas.length,
         notaMinAprobado: config.notaMinAprobado
-      },
-      detalle
+      }
     });
 
   } catch (error) {
