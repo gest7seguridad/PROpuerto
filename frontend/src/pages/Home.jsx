@@ -27,7 +27,7 @@ export default function Home() {
       {/* Hero */}
       <main className="max-w-6xl mx-auto px-6 py-16 text-center text-white">
         <h1 className="text-4xl md:text-5xl font-bold mb-6">
-          Certificación en Gestión de Residuos
+          Curso en Gestión de Residuos
         </h1>
         <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
           Completa la formación online, supera el examen y obtén tu certificado oficial
