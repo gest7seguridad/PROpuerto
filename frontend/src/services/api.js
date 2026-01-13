@@ -9,10 +9,11 @@ const api = axios.create({
   }
 });
 
-// Interceptor para añadir token
+// Interceptor para añadir token (usuario o admin)
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    // Primero buscar token de admin, luego de usuario
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
