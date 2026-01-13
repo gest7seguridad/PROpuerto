@@ -105,20 +105,46 @@ async function obtenerEstadisticas(req, res) {
       ORDER BY intento_num
     `;
 
+    // Usuarios recientes
+    const usuariosRecientes = await prisma.usuario.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        nombre: true,
+        apellidos: true,
+        email: true,
+        verificado: true,
+        createdAt: true
+      }
+    });
+
     res.json({
       usuarios: {
         total: totalUsuarios,
         verificados: usuariosVerificados,
-        conFormacionCompleta: Number(usuariosConFormacionCompleta[0]?.count || 0)
+        pendientes: totalUsuarios - usuariosVerificados,
+        conFormacionCompleta: Number(usuariosConFormacionCompleta[0]?.count || 0),
+        recientes: usuariosRecientes.map(u => ({
+          id: u.id,
+          nombre: u.nombre,
+          apellidos: u.apellidos,
+          email: u.email,
+          emailVerificado: u.verificado,
+          fechaRegistro: u.createdAt
+        }))
       },
       examenes: {
         total: totalExamenes,
         aprobados: examenesAprobados,
+        suspensos: totalExamenes - examenesAprobados,
         tasaAprobacion: totalExamenes > 0 ? ((examenesAprobados / totalExamenes) * 100).toFixed(1) : 0
       },
       certificados: {
+        total: certificadosEmitidos,
         emitidos: certificadosEmitidos,
-        firmados: certificadosFirmados
+        firmados: certificadosFirmados,
+        pendientes: certificadosEmitidos - certificadosFirmados
       },
       registrosPorDia,
       tasaAprobacionPorIntento
