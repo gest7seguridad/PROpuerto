@@ -44,7 +44,7 @@ async function main() {
       orden: 1,
       titulo: 'Introducción a la Gestión de Residuos',
       descripcion: 'Conceptos básicos sobre residuos, su impacto ambiental y la importancia del reciclaje.',
-      duracionMin: 10,
+      duracionMin: 3,
       contenido: `
 <h2>Bienvenido al Curso de Gestión de Residuos</h2>
 
@@ -85,7 +85,7 @@ async function main() {
       orden: 2,
       titulo: 'Los Contenedores de Reciclaje',
       descripcion: 'Aprende a identificar cada contenedor y qué residuos depositar en cada uno.',
-      duracionMin: 15,
+      duracionMin: 3,
       contenido: `
 <h2>Sistema de Contenedores de Reciclaje</h2>
 
@@ -166,7 +166,7 @@ async function main() {
       orden: 3,
       titulo: 'Residuos Especiales y Punto Limpio',
       descripcion: 'Conoce cómo gestionar residuos especiales y el funcionamiento del Punto Limpio.',
-      duracionMin: 12,
+      duracionMin: 3,
       contenido: `
 <h2>Residuos Especiales</h2>
 
@@ -249,7 +249,7 @@ async function main() {
       orden: 4,
       titulo: 'Reducción y Reutilización',
       descripcion: 'Estrategias para reducir la generación de residuos y reutilizar materiales.',
-      duracionMin: 10,
+      duracionMin: 3,
       contenido: `
 <h2>Reducir y Reutilizar: Las R más importantes</h2>
 
@@ -354,7 +354,7 @@ async function main() {
       orden: 5,
       titulo: 'La Gestión de Residuos en Puerto del Rosario',
       descripcion: 'Información específica sobre los servicios y normativas locales.',
-      duracionMin: 8,
+      duracionMin: 3,
       contenido: `
 <h2>Gestión de Residuos en Puerto del Rosario</h2>
 
