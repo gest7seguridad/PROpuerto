@@ -332,6 +332,13 @@ async function descargarCertificado(req, res) {
 /**
  * Verificar certificado (público)
  */
+// Funcion auxiliar para censurar DNI (mostrar solo parte por privacidad)
+function censurarDNI(dni) {
+  if (!dni || dni.length < 5) return '***';
+  // Mostrar solo los 3 ultimos digitos y la letra: ***4567A
+  return '***' + dni.slice(-4);
+}
+
 async function verificarCertificado(req, res) {
   try {
     const { codigo } = req.params;
@@ -342,7 +349,8 @@ async function verificarCertificado(req, res) {
         usuario: {
           select: {
             nombre: true,
-            apellidos: true
+            apellidos: true,
+            dni: true
           }
         }
       }
@@ -351,7 +359,7 @@ async function verificarCertificado(req, res) {
     if (!certificado || !certificado.firmado) {
       return res.status(404).json({
         valido: false,
-        mensaje: 'Certificado no encontrado o no válido'
+        mensaje: 'Certificado no encontrado o no valido'
       });
     }
 
@@ -359,6 +367,7 @@ async function verificarCertificado(req, res) {
       valido: true,
       certificado: {
         nombreCompleto: `${certificado.usuario.nombre} ${certificado.usuario.apellidos}`,
+        dniCensurado: censurarDNI(certificado.usuario.dni),
         codigoVerificacion: certificado.codigoVerificacion,
         fechaEmision: certificado.fechaEmision,
         fechaFirma: certificado.fechaFirma,

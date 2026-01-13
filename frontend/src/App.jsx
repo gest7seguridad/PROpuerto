@@ -16,6 +16,7 @@ import VerificarEmail from './pages/VerificarEmail';
 import RecuperarPassword from './pages/RecuperarPassword';
 import ResetPassword from './pages/ResetPassword';
 import VerificarCertificado from './pages/VerificarCertificado';
+import BuscarCertificado from './pages/BuscarCertificado';
 
 // Pages legales (LOPD)
 import PoliticaPrivacidad from './pages/PoliticaPrivacidad';
@@ -101,6 +102,7 @@ function App() {
         <Route path="/verificar-email" element={<VerificarEmail />} />
         <Route path="/recuperar-password" element={<RecuperarPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verificar" element={<BuscarCertificado />} />
         <Route path="/verificar/:codigo" element={<VerificarCertificado />} />
 
         {/* Rutas legales LOPD */}
