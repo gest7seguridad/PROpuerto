@@ -32,6 +32,22 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
+      // Verificar si es una petición de admin
+      const isAdminRequest = originalRequest.url?.includes('/admin/');
+
+      if (isAdminRequest) {
+        // Para admin, redirigir al login de admin
+        const adminToken = localStorage.getItem('adminToken');
+        if (adminToken) {
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminRefreshToken');
+          localStorage.removeItem('admin');
+          window.location.href = '/admin/login';
+        }
+        return Promise.reject(error);
+      }
+
+      // Para usuarios normales, intentar refresh
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         try {

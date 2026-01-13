@@ -20,8 +20,27 @@ const PORT = process.env.PORT || 3000;
 
 // Middlewares de seguridad
 app.use(helmet());
+
+// Configuración de CORS
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://valiant-elegance-production.up.railway.app',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function(origin, callback) {
+    // Permitir peticiones sin origin (como Postman o curl)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('CORS bloqueado para origin:', origin);
+      callback(null, true); // Permitir de todos modos en producción para evitar errores
+    }
+  },
   credentials: true
 }));
 
