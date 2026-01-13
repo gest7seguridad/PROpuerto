@@ -95,7 +95,7 @@ export default function Layout({ children }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500">
             <p>Ayuntamiento de Puerto del Rosario - Fuerteventura</p>
-            <p className="mt-2 sm:mt-0">Formación en Gestión de Residuos</p>
+            <p className="mt-2 sm:mt-0">Desarrollado por <a href="https://gestsiete.es" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">gestsiete.es</a></p>
           </div>
         </div>
       </footer>

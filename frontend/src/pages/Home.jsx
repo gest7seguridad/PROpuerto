@@ -91,7 +91,7 @@ export default function Home() {
       <footer className="mt-20 py-8 border-t border-primary-500">
         <div className="max-w-6xl mx-auto px-6 text-center text-primary-200 text-sm">
           <p>Ayuntamiento de Puerto del Rosario - Fuerteventura</p>
-          <p className="mt-2">Compromiso con el medio ambiente y la sostenibilidad</p>
+          <p className="mt-2">Desarrollado por <a href="https://gestsiete.es" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">gestsiete.es</a></p>
           <div className="mt-4">
             <Link to="/verificar" className="hover:text-white">Verificar certificado</Link>
             <span className="mx-3">|</span>
