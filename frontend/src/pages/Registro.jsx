@@ -17,7 +17,9 @@ export default function Registro() {
     piso: '',
     puerta: '',
     codigoPostal: '',
-    localidad: 'Puerto del Rosario'
+    localidad: 'Puerto del Rosario',
+    aceptaPrivacidad: false,
+    aceptaComunicaciones: false
   });
   const [loading, setLoading] = useState(false);
   const [errores, setErrores] = useState({});
@@ -40,7 +42,11 @@ export default function Registro() {
     }
 
     if (!/^\d{5}$/.test(form.codigoPostal)) {
-      nuevosErrores.codigoPostal = 'Código postal inválido';
+      nuevosErrores.codigoPostal = 'Codigo postal invalido';
+    }
+
+    if (!form.aceptaPrivacidad) {
+      nuevosErrores.aceptaPrivacidad = 'Debe aceptar la politica de privacidad para continuar';
     }
 
     setErrores(nuevosErrores);
@@ -77,8 +83,9 @@ export default function Registro() {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    const { name, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
+    setForm({ ...form, [name]: newValue });
     if (errores[name]) {
       setErrores({ ...errores, [name]: null });
     }
@@ -305,8 +312,85 @@ export default function Registro() {
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
+                La contrasena debe tener al menos 8 caracteres, una mayuscula, una minuscula y un numero.
               </p>
+            </div>
+
+            {/* Consentimientos LOPD */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Proteccion de Datos</h3>
+
+              <div className="space-y-4">
+                {/* Aceptacion obligatoria de politica de privacidad */}
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="aceptaPrivacidad"
+                      name="aceptaPrivacidad"
+                      type="checkbox"
+                      checked={form.aceptaPrivacidad}
+                      onChange={handleChange}
+                      className={`h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 ${
+                        errores.aceptaPrivacidad ? 'border-red-500' : ''
+                      }`}
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor="aceptaPrivacidad" className="text-gray-700">
+                      He leido y acepto la{' '}
+                      <Link to="/politica-privacidad" target="_blank" className="text-primary-600 hover:underline">
+                        Politica de Privacidad
+                      </Link>{' '}
+                      y el{' '}
+                      <Link to="/aviso-legal" target="_blank" className="text-primary-600 hover:underline">
+                        Aviso Legal
+                      </Link>
+                      . <span className="text-red-500">*</span>
+                    </label>
+                    {errores.aceptaPrivacidad && (
+                      <p className="text-red-500 text-sm mt-1">{errores.aceptaPrivacidad}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Consentimiento opcional para comunicaciones */}
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="aceptaComunicaciones"
+                      name="aceptaComunicaciones"
+                      type="checkbox"
+                      checked={form.aceptaComunicaciones}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor="aceptaComunicaciones" className="text-gray-700">
+                      Deseo recibir comunicaciones informativas del Ayuntamiento de Puerto del Rosario
+                      relacionadas con la gestion de residuos y medio ambiente.
+                    </label>
+                    <p className="text-gray-500 text-xs mt-1">
+                      Este consentimiento es opcional y puede revocarlo en cualquier momento.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-xs text-blue-800">
+                  <strong>Informacion basica sobre Proteccion de Datos:</strong><br />
+                  Responsable: Ayuntamiento de Puerto del Rosario.
+                  Finalidad: Gestion de la formacion en residuos y emision de certificados.
+                  Legitimacion: Consentimiento del interesado y ejecucion del servicio.
+                  Destinatarios: No se cederan datos a terceros salvo obligacion legal.
+                  Derechos: Acceso, rectificacion, supresion, limitacion, portabilidad y oposicion.
+                  Mas informacion en la{' '}
+                  <Link to="/politica-privacidad" target="_blank" className="text-blue-600 hover:underline">
+                    Politica de Privacidad
+                  </Link>.
+                </p>
+              </div>
             </div>
 
             <button

@@ -97,6 +97,20 @@ export default function Layout({ children }) {
             <p>Ayuntamiento de Puerto del Rosario - Fuerteventura</p>
             <p className="mt-2 sm:mt-0">Desarrollado por <a href="https://gestsiete.es" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">gestsiete.es</a></p>
           </div>
+          <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-gray-500">
+            <Link to="/politica-privacidad" className="hover:text-primary-600">Politica de Privacidad</Link>
+            <Link to="/aviso-legal" className="hover:text-primary-600">Aviso Legal</Link>
+            <Link to="/politica-cookies" className="hover:text-primary-600">Politica de Cookies</Link>
+            <button
+              onClick={() => {
+                localStorage.removeItem('cookieConsent');
+                window.location.reload();
+              }}
+              className="hover:text-primary-600"
+            >
+              Configurar Cookies
+            </button>
+          </div>
         </div>
       </footer>
     </div>

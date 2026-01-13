@@ -92,10 +92,17 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 text-center text-primary-200 text-sm">
           <p>Ayuntamiento de Puerto del Rosario - Fuerteventura</p>
           <p className="mt-2">Desarrollado por <a href="https://gestsiete.es" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">gestsiete.es</a></p>
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-2">
             <Link to="/verificar" className="hover:text-white">Verificar certificado</Link>
-            <span className="mx-3">|</span>
-            <Link to="/admin/login" className="hover:text-white">Acceso administración</Link>
+            <span className="hidden sm:inline">|</span>
+            <Link to="/admin/login" className="hover:text-white">Acceso administracion</Link>
+          </div>
+          <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-2 text-xs">
+            <Link to="/politica-privacidad" className="hover:text-white">Politica de Privacidad</Link>
+            <span className="hidden sm:inline">|</span>
+            <Link to="/aviso-legal" className="hover:text-white">Aviso Legal</Link>
+            <span className="hidden sm:inline">|</span>
+            <Link to="/politica-cookies" className="hover:text-white">Politica de Cookies</Link>
           </div>
         </div>
       </footer>

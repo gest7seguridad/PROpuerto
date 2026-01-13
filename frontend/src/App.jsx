@@ -5,7 +5,10 @@ import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
 
-// Pages públicas
+// Componentes globales
+import CookieBanner from './components/CookieBanner';
+
+// Pages publicas
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Registro from './pages/Registro';
@@ -13,6 +16,11 @@ import VerificarEmail from './pages/VerificarEmail';
 import RecuperarPassword from './pages/RecuperarPassword';
 import ResetPassword from './pages/ResetPassword';
 import VerificarCertificado from './pages/VerificarCertificado';
+
+// Pages legales (LOPD)
+import PoliticaPrivacidad from './pages/PoliticaPrivacidad';
+import AvisoLegal from './pages/AvisoLegal';
+import PoliticaCookies from './pages/PoliticaCookies';
 
 // Pages privadas
 import Dashboard from './pages/Dashboard';
@@ -83,42 +91,50 @@ function PublicRoute({ children }) {
 
 function App() {
   return (
-    <Routes>
-      {/* Rutas públicas */}
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-      <Route path="/registro" element={<PublicRoute><Registro /></PublicRoute>} />
-      <Route path="/verificar-email" element={<VerificarEmail />} />
-      <Route path="/recuperar-password" element={<RecuperarPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/verificar/:codigo" element={<VerificarCertificado />} />
+    <>
+      <CookieBanner />
+      <Routes>
+        {/* Rutas publicas */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/registro" element={<PublicRoute><Registro /></PublicRoute>} />
+        <Route path="/verificar-email" element={<VerificarEmail />} />
+        <Route path="/recuperar-password" element={<RecuperarPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verificar/:codigo" element={<VerificarCertificado />} />
 
-      {/* Rutas privadas */}
-      <Route path="/dashboard" element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>} />
-      <Route path="/modulo/:id" element={<PrivateRoute><Layout><Modulo /></Layout></PrivateRoute>} />
-      <Route path="/examen" element={<PrivateRoute><Layout><Examen /></Layout></PrivateRoute>} />
-      <Route path="/examen/:id/resultado" element={<PrivateRoute><Layout><ResultadoExamen /></Layout></PrivateRoute>} />
-      <Route path="/certificado" element={<PrivateRoute><Layout><Certificado /></Layout></PrivateRoute>} />
+        {/* Rutas legales LOPD */}
+        <Route path="/politica-privacidad" element={<PoliticaPrivacidad />} />
+        <Route path="/aviso-legal" element={<AvisoLegal />} />
+        <Route path="/politica-cookies" element={<PoliticaCookies />} />
 
-      {/* Rutas admin */}
-      <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-      <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-      <Route path="/admin/usuarios" element={<AdminLayout><AdminUsuarios /></AdminLayout>} />
-      <Route path="/admin/modulos" element={<AdminLayout><AdminModulos /></AdminLayout>} />
-      <Route path="/admin/preguntas" element={<AdminLayout><AdminPreguntas /></AdminLayout>} />
+        {/* Rutas privadas */}
+        <Route path="/dashboard" element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>} />
+        <Route path="/modulo/:id" element={<PrivateRoute><Layout><Modulo /></Layout></PrivateRoute>} />
+        <Route path="/examen" element={<PrivateRoute><Layout><Examen /></Layout></PrivateRoute>} />
+        <Route path="/examen/:id/resultado" element={<PrivateRoute><Layout><ResultadoExamen /></Layout></PrivateRoute>} />
+        <Route path="/certificado" element={<PrivateRoute><Layout><Certificado /></Layout></PrivateRoute>} />
 
-      {/* 404 */}
-      <Route path="*" element={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <h1 className="text-6xl font-bold text-primary-600">404</h1>
-            <p className="mt-4 text-xl text-gray-600">Página no encontrada</p>
-            <a href="/" className="mt-4 inline-block btn btn-primary">Volver al inicio</a>
+        {/* Rutas admin */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+        <Route path="/admin/usuarios" element={<AdminLayout><AdminUsuarios /></AdminLayout>} />
+        <Route path="/admin/modulos" element={<AdminLayout><AdminModulos /></AdminLayout>} />
+        <Route path="/admin/preguntas" element={<AdminLayout><AdminPreguntas /></AdminLayout>} />
+
+        {/* 404 */}
+        <Route path="*" element={
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="text-center">
+              <h1 className="text-6xl font-bold text-primary-600">404</h1>
+              <p className="mt-4 text-xl text-gray-600">Pagina no encontrada</p>
+              <a href="/" className="mt-4 inline-block btn btn-primary">Volver al inicio</a>
+            </div>
           </div>
-        </div>
-      } />
-    </Routes>
+        } />
+      </Routes>
+    </>
   );
 }
 

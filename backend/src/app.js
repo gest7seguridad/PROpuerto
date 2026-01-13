@@ -18,10 +18,7 @@ const adminRoutes = require('./routes/admin');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares de seguridad
-app.use(helmet());
-
-// Configuración de CORS
+// Configuracion de CORS - DEBE ir ANTES de helmet
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -29,19 +26,42 @@ const allowedOrigins = [
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
-app.use(cors({
-  origin: function(origin, callback) {
-    // Permitir peticiones sin origin (como Postman o curl)
-    if (!origin) return callback(null, true);
+// Middleware CORS manual para mayor control
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
 
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log('CORS bloqueado para origin:', origin);
-      callback(null, true); // Permitir de todos modos en producción para evitar errores
-    }
-  },
-  credentials: true
+  // Permitir origenes de la lista o todos en desarrollo
+  if (allowedOrigins.includes(origin) || !origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  } else {
+    // En produccion, permitir el origen igualmente para evitar errores
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  // Responder inmediatamente a preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  next();
+});
+
+// Tambien usar el middleware cors como respaldo
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+// Middlewares de seguridad
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
 // Parsers
