@@ -59,51 +59,44 @@ async function login(req, res) {
  */
 async function obtenerEstadisticas(req, res) {
   try {
+    // Estadísticas básicas usando Prisma (evitando raw queries problemáticas)
     const [
       totalUsuarios,
       usuariosVerificados,
-      usuariosConFormacionCompleta,
       totalExamenes,
       examenesAprobados,
       certificadosEmitidos,
-      certificadosFirmados
+      certificadosFirmados,
+      totalModulosActivos
     ] = await Promise.all([
       prisma.usuario.count(),
       prisma.usuario.count({ where: { verificado: true } }),
-      prisma.$queryRaw`
-        SELECT COUNT(DISTINCT u.id) as count
-        FROM usuarios u
-        WHERE (
-          SELECT COUNT(DISTINCT pm.modulo_id)
-          FROM progreso_modulos pm
-          WHERE pm.usuario_id = u.id AND pm.completado = true
-        ) = (SELECT COUNT(*) FROM modulos WHERE activo = true)
-      `,
       prisma.examen.count(),
       prisma.examen.count({ where: { aprobado: true } }),
       prisma.certificado.count(),
-      prisma.certificado.count({ where: { firmado: true } })
+      prisma.certificado.count({ where: { firmado: true } }),
+      prisma.modulo.count({ where: { activo: true } })
     ]);
 
-    // Registros por día (últimos 30 días)
-    const registrosPorDia = await prisma.$queryRaw`
-      SELECT DATE(created_at) as fecha, COUNT(*) as registros
-      FROM usuarios
-      WHERE created_at >= NOW() - INTERVAL '30 days'
-      GROUP BY DATE(created_at)
-      ORDER BY fecha DESC
-    `;
-
-    // Tasa de aprobación por intento
-    const tasaAprobacionPorIntento = await prisma.$queryRaw`
-      SELECT intento_num,
-             COUNT(*) as total,
-             SUM(CASE WHEN aprobado THEN 1 ELSE 0 END) as aprobados
-      FROM examenes
-      WHERE fecha_fin IS NOT NULL
-      GROUP BY intento_num
-      ORDER BY intento_num
-    `;
+    // Usuarios con formación completa (usando Prisma en lugar de raw query)
+    let usuariosConFormacionCompleta = 0;
+    if (totalModulosActivos > 0) {
+      const usuariosConProgreso = await prisma.usuario.findMany({
+        select: {
+          id: true,
+          _count: {
+            select: {
+              progreso: {
+                where: { completado: true }
+              }
+            }
+          }
+        }
+      });
+      usuariosConFormacionCompleta = usuariosConProgreso.filter(
+        u => u._count.progreso >= totalModulosActivos
+      ).length;
+    }
 
     // Usuarios recientes
     const usuariosRecientes = await prisma.usuario.findMany({
@@ -119,12 +112,57 @@ async function obtenerEstadisticas(req, res) {
       }
     });
 
+    // Registros por día - simplificado
+    const treintaDiasAtras = new Date();
+    treintaDiasAtras.setDate(treintaDiasAtras.getDate() - 30);
+
+    const usuariosUltimos30Dias = await prisma.usuario.findMany({
+      where: {
+        createdAt: { gte: treintaDiasAtras }
+      },
+      select: { createdAt: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Agrupar por fecha
+    const registrosPorFecha = {};
+    usuariosUltimos30Dias.forEach(u => {
+      const fecha = u.createdAt.toISOString().split('T')[0];
+      registrosPorFecha[fecha] = (registrosPorFecha[fecha] || 0) + 1;
+    });
+
+    const registrosPorDia = Object.entries(registrosPorFecha).map(([fecha, registros]) => ({
+      fecha,
+      registros
+    })).sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+    // Tasa de aprobación por intento
+    const examenesFinalizados = await prisma.examen.findMany({
+      where: { fechaFin: { not: null } },
+      select: { intentoNum: true, aprobado: true }
+    });
+
+    const tasaPorIntento = {};
+    examenesFinalizados.forEach(e => {
+      if (!tasaPorIntento[e.intentoNum]) {
+        tasaPorIntento[e.intentoNum] = { total: 0, aprobados: 0 };
+      }
+      tasaPorIntento[e.intentoNum].total++;
+      if (e.aprobado) tasaPorIntento[e.intentoNum].aprobados++;
+    });
+
+    const tasaAprobacionPorIntento = Object.entries(tasaPorIntento).map(([intentoNum, data]) => ({
+      intentoNum: parseInt(intentoNum),
+      total: data.total,
+      aprobados: data.aprobados
+    })).sort((a, b) => a.intentoNum - b.intentoNum);
+
     res.json({
       usuarios: {
         total: totalUsuarios,
         verificados: usuariosVerificados,
         pendientes: totalUsuarios - usuariosVerificados,
-        conFormacionCompleta: Number(usuariosConFormacionCompleta[0]?.count || 0),
+        conFormacionCompleta: usuariosConFormacionCompleta,
         recientes: usuariosRecientes.map(u => ({
           id: u.id,
           nombre: u.nombre,
@@ -138,7 +176,7 @@ async function obtenerEstadisticas(req, res) {
         total: totalExamenes,
         aprobados: examenesAprobados,
         suspensos: totalExamenes - examenesAprobados,
-        tasaAprobacion: totalExamenes > 0 ? ((examenesAprobados / totalExamenes) * 100).toFixed(1) : 0
+        tasaAprobacion: totalExamenes > 0 ? ((examenesAprobados / totalExamenes) * 100).toFixed(1) : '0'
       },
       certificados: {
         total: certificadosEmitidos,
@@ -146,22 +184,16 @@ async function obtenerEstadisticas(req, res) {
         firmados: certificadosFirmados,
         pendientes: certificadosEmitidos - certificadosFirmados
       },
-      registrosPorDia: registrosPorDia.map(r => ({
-        fecha: r.fecha,
-        registros: Number(r.registros)
-      })),
-      tasaAprobacionPorIntento: tasaAprobacionPorIntento.map(t => ({
-        intentoNum: Number(t.intento_num),
-        total: Number(t.total),
-        aprobados: Number(t.aprobados)
-      }))
+      registrosPorDia,
+      tasaAprobacionPorIntento
     });
 
   } catch (error) {
     console.error('Error obteniendo estadísticas:', error);
     res.status(500).json({
       error: 'Error interno',
-      message: 'Error al obtener estadísticas'
+      message: 'Error al obtener estadísticas',
+      detalle: process.env.NODE_ENV !== 'production' ? error.message : undefined
     });
   }
 }
